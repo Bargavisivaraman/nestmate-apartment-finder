@@ -1,0 +1,98 @@
+// Prisma schema for Apartment Finder & Roommate Matcher
+// Dev uses SQLite for zero-config local runs. For production, switch
+// `provider` to "postgresql" and point DATABASE_URL at your Postgres instance.
+// See README "Switching to PostgreSQL".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("USER") // USER | ADMIN
+  image     String?
+  createdAt DateTime @default(now())
+
+  roommateProfile  RoommateProfile?
+  apartments       Apartment[]      @relation("CreatedApartments")
+  favorites        Favorite[]
+  sentMessages     Message[]        @relation("SentMessages")
+  receivedMessages Message[]        @relation("ReceivedMessages")
+}
+
+model Apartment {
+  id            String   @id @default(cuid())
+  title         String
+  address       String
+  city          String
+  state         String
+  rent          Int
+  bedrooms      Int
+  bathrooms     Float
+  sqft          Int
+  description   String
+  imageUrl      String?
+  amenities     String   @default("") // comma-separated
+  petFriendly   Boolean  @default(false)
+  furnished     Boolean  @default(false)
+  availableFrom DateTime @default(now())
+  leaseText     String?  // raw lease text for the AI lease analyzer
+  commuteNotes  String?
+  neighborhood  String?
+  latitude      Float?
+  longitude     Float?
+  createdById   String?
+  createdBy     User?    @relation("CreatedApartments", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+
+  favorites Favorite[]
+}
+
+model Favorite {
+  id          String  @id @default(cuid())
+  userId      String
+  apartmentId String
+  shortlisted Boolean @default(false)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apartment   Apartment @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, apartmentId])
+}
+
+model RoommateProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  budgetMin     Int      @default(500)
+  budgetMax     Int      @default(2000)
+  cleanliness   Int      @default(3) // 1..5
+  sleepSchedule String   @default("FLEXIBLE") // EARLY_BIRD | NIGHT_OWL | FLEXIBLE
+  social        Int      @default(3) // 1..5
+  smoking       Boolean  @default(false)
+  pets          Boolean  @default(false)
+  gender        String?
+  bio           String?
+  city          String?
+  interests     String   @default("") // comma-separated
+  createdAt     DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  content    String
+  read       Boolean  @default(false)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}

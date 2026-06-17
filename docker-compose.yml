@@ -1,0 +1,43 @@
+# Default: runs the app on SQLite with a persistent volume — works with a
+# single `docker compose up`. To use PostgreSQL instead, see the README
+# section "Switching to PostgreSQL" and enable the `db` service below.
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/data/prod.db"
+      AUTH_SECRET: "${AUTH_SECRET:-change-me-in-production-please-generate-a-real-secret}"
+      NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o-mini}"
+    volumes:
+      - app-data:/data
+    # On first boot, sync the schema, then start the standalone server.
+    command: >
+      sh -c "npx --yes prisma@6 db push --skip-generate --accept-data-loss || true;
+             node server.js"
+    restart: unless-stopped
+
+  # PostgreSQL service for production. Enable with:
+  #   docker compose --profile postgres up
+  # and set web's DATABASE_URL to the postgres URL plus switch the Prisma
+  # provider to "postgresql" (see README).
+  db:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: nestmate
+      POSTGRES_PASSWORD: nestmate
+      POSTGRES_DB: apartment_finder
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  pg-data:

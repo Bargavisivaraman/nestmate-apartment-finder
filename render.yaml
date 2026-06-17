@@ -1,0 +1,26 @@
+# Render.com blueprint. Deploys the Dockerized Next.js app with a persistent
+# disk for the SQLite database. For a managed Postgres setup instead, see the
+# README "Switching to PostgreSQL" and replace the disk with a `databases:` block.
+
+services:
+  - type: web
+    name: apartment-finder
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        value: file:/data/prod.db
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1

@@ -32,6 +32,9 @@ RUN apk add --no-cache openssl
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+# Bind to all interfaces. Without this the Next standalone server binds to the
+# container hostname and is unreachable behind a load balancer (502s).
+ENV HOSTNAME="0.0.0.0"
 # Absolute path so the standalone server resolves the bundled SQLite db.
 ENV DATABASE_URL="file:/app/prisma/prod.db"
 

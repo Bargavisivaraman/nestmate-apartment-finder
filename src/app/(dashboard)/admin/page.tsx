@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SimpleBarChart } from "@/components/charts/simple-bar-chart";
+import { SyncListings } from "@/components/admin/sync-listings";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default async function AdminPage() {
@@ -86,6 +87,15 @@ export default async function AdminPage() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">Import live listings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SyncListings />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

@@ -78,7 +78,10 @@ export default async function ApartmentDetailPage({
           <h1 className="text-2xl font-bold">{apartment.title}</h1>
           <p className="mt-1 flex items-center gap-1 text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            {apartment.address}, {apartment.neighborhood ? `${apartment.neighborhood}, ` : ""}
+            {apartment.address},{" "}
+            {apartment.neighborhood && apartment.neighborhood !== apartment.city
+              ? `${apartment.neighborhood}, `
+              : ""}
             {apartment.city}, {apartment.state}
           </p>
         </div>

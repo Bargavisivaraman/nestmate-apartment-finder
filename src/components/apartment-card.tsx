@@ -93,7 +93,9 @@ export function ApartmentCard({
           <p className="flex items-center gap-1 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
             <span className="line-clamp-1">
-              {apartment.neighborhood ? `${apartment.neighborhood}, ` : ""}
+              {apartment.neighborhood && apartment.neighborhood !== apartment.city
+                ? `${apartment.neighborhood}, `
+                : ""}
               {apartment.city}, {apartment.state}
             </span>
           </p>

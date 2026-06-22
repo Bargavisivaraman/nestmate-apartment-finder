@@ -1,15 +1,18 @@
 // Prisma schema for Apartment Finder & Roommate Matcher
-// Dev uses SQLite for zero-config local runs. For production, switch
-// `provider` to "postgresql" and point DATABASE_URL at your Postgres instance.
-// See README "Switching to PostgreSQL".
+// Uses PostgreSQL (Supabase in production). DATABASE_URL holds the connection
+// string. For zero-config local runs you can point DATABASE_URL at any Postgres
+// instance (e.g. `docker compose --profile postgres up db`).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Pooled (transaction) connection for the running app.
+  url       = env("DATABASE_URL")
+  // Direct (session) connection for migrations / db push / seed.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

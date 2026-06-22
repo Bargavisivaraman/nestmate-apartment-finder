@@ -1,8 +1,7 @@
-# Render.com blueprint. Deploys the Dockerized Next.js app. The Docker image
-# bakes in a pre-seeded SQLite database at build time, so it runs on the free
-# tier with no persistent disk or external database (demo data resets on each
-# redeploy). For durable data, switch to PostgreSQL — see the README
-# "Switching to PostgreSQL" and add a `databases:` block.
+# Render.com blueprint. Deploys the Dockerized Next.js app connected to an
+# external PostgreSQL database (Supabase) via DATABASE_URL. Data persists
+# across redeploys. Set the secret env vars (DATABASE_URL, DIRECT_URL,
+# AUTH_SECRET, NEXTAUTH_URL) in the Render dashboard or via the API.
 
 services:
   - type: web
@@ -12,8 +11,12 @@ services:
     plan: free
     healthCheckPath: /
     envVars:
+      # Pooled (transaction) Postgres connection used by the running app.
       - key: DATABASE_URL
-        value: file:/app/prisma/prod.db
+        sync: false
+      # Direct (session) Postgres connection used for migrations.
+      - key: DIRECT_URL
+        sync: false
       - key: AUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
@@ -22,3 +25,5 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o-mini
+      - key: RENTCAST_API_KEY
+        sync: false

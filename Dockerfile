@@ -15,15 +15,13 @@ RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# SQLite database baked into the image, pre-seeded with demo data so the app
-# works immediately on hosts without a persistent disk (e.g. Render free tier).
-ENV DATABASE_URL="file:/app/prisma/prod.db"
 ENV NEXT_TELEMETRY_DISABLED=1
+# Placeholder so `prisma generate` and the build never need a live database.
+# The real DATABASE_URL / DIRECT_URL are injected at runtime by the host.
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/db"
 
 # build script runs `prisma generate && next build`.
-RUN npm run build \
-  && npx prisma db push --skip-generate \
-  && npm run db:seed
+RUN npm run build
 
 # ---- Runner ----
 FROM node:22-alpine AS runner
@@ -35,8 +33,6 @@ ENV PORT=3000
 # Bind to all interfaces. Without this the Next standalone server binds to the
 # container hostname and is unreachable behind a load balancer (502s).
 ENV HOSTNAME="0.0.0.0"
-# Absolute path so the standalone server resolves the bundled SQLite db.
-ENV DATABASE_URL="file:/app/prisma/prod.db"
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
@@ -46,7 +42,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prisma schema, generated client, and the pre-seeded database.
+# Prisma schema + generated client (engine) for the runtime query layer.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
@@ -54,4 +50,5 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modul
 USER nextjs
 EXPOSE 3000
 
+# Connects to PostgreSQL (Supabase) via DATABASE_URL provided at runtime.
 CMD ["node", "server.js"]

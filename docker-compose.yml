@@ -1,6 +1,5 @@
-# Default: runs the app on SQLite with a persistent volume — works with a
-# single `docker compose up`. To use PostgreSQL instead, see the README
-# section "Switching to PostgreSQL" and enable the `db` service below.
+# Runs the app against your PostgreSQL database. Provide connection details and
+# secrets via a .env file or the shell environment, then `docker compose up`.
 
 services:
   web:
@@ -8,26 +7,22 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "file:/data/prod.db"
+      DATABASE_URL: "${DATABASE_URL}"
+      DIRECT_URL: "${DIRECT_URL:-${DATABASE_URL}}"
       AUTH_SECRET: "${AUTH_SECRET:-change-me-in-production-please-generate-a-real-secret}"
       NEXTAUTH_URL: "${NEXTAUTH_URL:-http://localhost:3000}"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o-mini}"
-    volumes:
-      - app-data:/data
-    # On first boot, sync the schema, then start the standalone server.
-    command: >
-      sh -c "npx --yes prisma@6 db push --skip-generate --accept-data-loss || true;
-             node server.js"
+      RENTCAST_API_KEY: "${RENTCAST_API_KEY:-}"
     restart: unless-stopped
 
-  # PostgreSQL service for production. Enable with:
-  #   docker compose --profile postgres up
-  # and set web's DATABASE_URL to the postgres URL plus switch the Prisma
-  # provider to "postgresql" (see README).
+  # Optional local PostgreSQL for fully offline development. Enable with:
+  #   docker compose --profile local-db up
+  # then set DATABASE_URL/DIRECT_URL to:
+  #   postgresql://nestmate:nestmate@localhost:5432/apartment_finder
   db:
     image: postgres:16-alpine
-    profiles: ["postgres"]
+    profiles: ["local-db"]
     environment:
       POSTGRES_USER: nestmate
       POSTGRES_PASSWORD: nestmate
@@ -39,5 +34,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  app-data:
   pg-data:

@@ -10,8 +10,24 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nestmate
+          POSTGRES_PASSWORD: nestmate
+          POSTGRES_DB: apartment_finder
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
-      DATABASE_URL: "file:./ci.db"
+      DATABASE_URL: "postgresql://nestmate:nestmate@localhost:5432/apartment_finder"
+      DIRECT_URL: "postgresql://nestmate:nestmate@localhost:5432/apartment_finder"
       AUTH_SECRET: "ci-secret-not-used-in-production"
       NEXTAUTH_URL: "http://localhost:3000"
 

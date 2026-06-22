@@ -42,11 +42,16 @@ Built with **Next.js (App Router) · TypeScript · Tailwind CSS · Prisma · Aut
 # 1. Install
 npm install
 
-# 2. Set up the database (SQLite by default) and seed demo data
+# 2. Configure the database — copy .env.example to .env and set DATABASE_URL
+#    and DIRECT_URL to your PostgreSQL connection (e.g. Supabase, Neon, or a
+#    local Postgres via `docker compose --profile local-db up db`).
+cp .env.example .env
+
+# 3. Create the schema and seed demo data
 npx prisma db push
 npm run db:seed
 
-# 3. Run
+# 4. Run
 npm run dev
 # open http://localhost:3000
 ```
@@ -69,11 +74,13 @@ Copy `.env.example` to `.env`:
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `DATABASE_URL` | yes | `file:./dev.db` for SQLite, or a Postgres URL. |
+| `DATABASE_URL` | yes | Pooled PostgreSQL connection (Supabase transaction pooler, port 6543, `?pgbouncer=true`). |
+| `DIRECT_URL` | yes | Direct PostgreSQL connection (port 5432) for migrations/seed. |
 | `AUTH_SECRET` | yes | Session signing secret. Generate with `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | prod | Public base URL of the app. |
 | `OPENAI_API_KEY` | no | Enables live OpenAI calls; falls back to local AI when empty. |
 | `OPENAI_MODEL` | no | Defaults to `gpt-4o-mini`. |
+| `RENTCAST_API_KEY` | no | Enables the admin "Import live listings" sync from RentCast. |
 
 ---
 

@@ -45,6 +45,7 @@ export function ProfileForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch("/api/roommate")
@@ -63,15 +64,24 @@ export function ProfileForm() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const res = await fetch("/api/roommate", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(p),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSaved(true);
-      router.refresh();
+    setError("");
+    try {
+      const res = await fetch("/api/roommate", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(p),
+      });
+      if (res.ok) {
+        setSaved(true);
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Could not save your profile. Try again.");
+      }
+    } catch {
+      setError("Network error. Try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -199,6 +209,7 @@ export function ProfileForm() {
             <Check className="h-4 w-4" /> Saved
           </span>
         )}
+        {error && <span className="text-sm text-destructive">{error}</span>}
       </div>
     </form>
   );

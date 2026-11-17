@@ -11,9 +11,10 @@ const schema = z.object({
   social: z.coerce.number().int().min(1).max(5),
   smoking: z.coerce.boolean(),
   pets: z.coerce.boolean(),
-  gender: z.string().optional(),
-  bio: z.string().max(500).optional(),
-  city: z.string().optional(),
+  // Nullable columns come back as null from GET; accept them on save too.
+  gender: z.string().nullish(),
+  bio: z.string().max(500).nullish(),
+  city: z.string().nullish(),
   interests: z.string().optional(),
 });
 
@@ -33,7 +34,7 @@ export async function PUT(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(

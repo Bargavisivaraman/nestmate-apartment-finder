@@ -37,11 +37,17 @@ function overlap(min1: number, max1: number, min2: number, max2: number): number
 }
 
 function toList(s: string): string[] {
-  return s
-    .toLowerCase()
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean);
+  // Dedupe so a repeated interest ("cooking, cooking") can't inflate the
+  // interest score or produce duplicate shared-interest entries.
+  return [
+    ...new Set(
+      s
+        .toLowerCase()
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean),
+    ),
+  ];
 }
 
 export function calculateCompatibility(

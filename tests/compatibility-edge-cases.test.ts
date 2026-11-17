@@ -61,4 +61,19 @@ describe("calculateCompatibility edge cases", () => {
     const r = calculateCompatibility(base, { ...base, interests: "HIKING, chess" });
     expect(r.sharedInterests).toEqual(["hiking"]);
   });
+
+  it("ignores duplicate interests instead of inflating the score", () => {
+    const r = calculateCompatibility(
+      { ...base, interests: "hiking, hiking, hiking" },
+      { ...base, interests: "hiking, chess, movies" },
+    );
+    expect(r.sharedInterests).toEqual(["hiking"]);
+    // One of three distinct interests overlaps on the smaller list (1 of 1).
+    expect(factor(r, "Interests").score).toBe(100);
+    const dup = calculateCompatibility(
+      { ...base, interests: "hiking, hiking, cooking" },
+      { ...base, interests: "hiking, cooking" },
+    );
+    expect(dup.sharedInterests).toEqual(["hiking", "cooking"]);
+  });
 });

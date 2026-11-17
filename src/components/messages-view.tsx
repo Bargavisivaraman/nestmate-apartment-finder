@@ -50,9 +50,9 @@ export function MessagesView({ currentUserId }: { currentUserId: string }) {
 
   useEffect(() => {
     loadConversations();
-    fetch("/api/users")
-      .then((r) => r.json())
-      .then(setDirectory);
+    fetch("/api/users").then(async (r) => {
+      if (r.ok) setDirectory(await r.json());
+    });
   }, [loadConversations]);
 
   const openThread = useCallback(async (user: UserLite) => {

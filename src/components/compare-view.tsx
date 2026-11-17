@@ -124,11 +124,16 @@ export function CompareView({
               {chosen.map((a, i) => (
                 <th key={a.id} className="p-3 text-left">
                   <Select value={a.id} onChange={(e) => setSlot(i, e.target.value)}>
-                    {apartments.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.title}
-                      </option>
-                    ))}
+                    {apartments
+                      // Keep the current pick, but hide apartments already
+                      // shown in another column so a listing can't appear
+                      // (and duplicate React keys) twice.
+                      .filter((opt) => opt.id === a.id || !selected.includes(opt.id))
+                      .map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.title}
+                        </option>
+                      ))}
                   </Select>
                 </th>
               ))}

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -73,6 +73,15 @@ export async function POST(req: Request) {
   const { receiverId, content } = parsed.data;
   if (receiverId === session.user.id) {
     return NextResponse.json({ error: "Cannot message yourself" }, { status: 400 });
+  }
+  // A stale ?to= link can point at a deleted user; a create would otherwise
+  // crash on the FK constraint.
+  const receiver = await prisma.user.findUnique({
+    where: { id: receiverId },
+    select: { id: true },
+  });
+  if (!receiver) {
+    return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
   }
   const message = await prisma.message.create({
     data: { senderId: session.user.id, receiverId, content },

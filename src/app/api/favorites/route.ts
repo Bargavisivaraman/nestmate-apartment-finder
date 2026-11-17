@@ -26,12 +26,22 @@ export async function POST(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
   const { apartmentId, shortlisted } = parsed.data;
+
+  // The listing may have been deleted since the client loaded it; a create
+  // against a missing apartment would otherwise crash on the FK constraint.
+  const apartment = await prisma.apartment.findUnique({
+    where: { id: apartmentId },
+    select: { id: true },
+  });
+  if (!apartment) {
+    return NextResponse.json({ error: "Apartment not found" }, { status: 404 });
+  }
 
   const existing = await prisma.favorite.findUnique({
     where: { userId_apartmentId: { userId: session.user.id, apartmentId } },

@@ -35,8 +35,8 @@ export async function GET(req: Request) {
   const where: Record<string, unknown> = {
     rent: { gte: minRent, lte: maxRent },
   };
-  if (city) where.city = { contains: city };
-  if (beds) where.bedrooms = { gte: Number(beds) };
+  if (city) where.city = { contains: city, mode: "insensitive" };
+  if (beds && Number.isFinite(Number(beds))) where.bedrooms = { gte: Number(beds) };
   if (petFriendly === "true") where.petFriendly = true;
 
   let apartments = await prisma.apartment.findMany({
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
